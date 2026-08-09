@@ -1,0 +1,9 @@
+node_modules
+.vscode
+dist
+yarn.lock
+package-lock.json
+.suglite_history
+bun.lock
+
+public
