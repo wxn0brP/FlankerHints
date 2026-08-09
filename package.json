@@ -1,6 +1,6 @@
 {
     "name": "@wxn0brp/flanker-hints",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "description": "Vimium-style navigation hints for Flanker UI",
@@ -12,10 +12,10 @@
     "author": "wxn0brP",
     "license": "MIT",
     "type": "module",
-	"scripts": {
-		"build": "tsc && tsc-alias && sass src:dist",
-		"build:bun": "bun build src/index.ts --outdir public --outfile bundle.js --target browser"
-	},
+    "scripts": {
+        "build": "tsc && tsc-alias && sass src:dist",
+        "build:bun": "bun build src/index.ts --outdir public --outfile bundle.js --target browser"
+    },
     "devDependencies": {
         "@wxn0brp/biome": "*",
         "@wxn0brp/flanker-ui": "^0.5.2",
