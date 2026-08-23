@@ -15,6 +15,7 @@ export function init(cfg: Partial<FH_Config> = {}) {
 	config = {
 		autoGenerate: true,
 		hintPosition: "top-left",
+		enabled: true,
 		...cfg,
 		keys: {
 			links: "f",
@@ -25,6 +26,7 @@ export function init(cfg: Partial<FH_Config> = {}) {
 	};
 
 	document.addEventListener("keydown", event => {
+		if (!config.enabled) return;
 		if (
 			event.target instanceof HTMLInputElement ||
 			event.target instanceof HTMLTextAreaElement
@@ -50,6 +52,15 @@ export function init(cfg: Partial<FH_Config> = {}) {
 			activate(key);
 		}
 	});
+}
+
+export function enable() {
+	config.enabled = true;
+}
+
+export function disable() {
+	config.enabled = false;
+	deactivate();
 }
 
 export * from "./actions";

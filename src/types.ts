@@ -8,6 +8,7 @@ export interface FH_Config {
 	};
 	autoGenerate: boolean;
 	hintPosition: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+	enabled: boolean;
 }
 
 export interface FH_Hint {
