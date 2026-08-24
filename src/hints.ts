@@ -1,129 +1,254 @@
 import { config } from ".";
 import { executeAction, getDefaultAction } from "./actions";
-import type { FH_Action, FH_Hint } from "./types";
-import { hintsContainer } from "./vars";
+import { generateKeys } from "./keyGen";
+import type { FH_Action, FH_Hint, FH_Selectors } from "./types";
+import { getHintsContainer, IGNORE_SELECTOR } from "./vars";
+
+const DEFAULT_SELECTORS: FH_Selectors = {
+	links: "a[href]",
+	inputs: "input, select, textarea, [contenteditable]",
+	buttons: "button, [role=button]",
+};
 
 let activeHints: FH_Hint[] = [];
 let isActive = false;
+let typedSequence = "";
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz";
+function isIgnored(element: HTMLElement) {
+	return !!element.closest(IGNORE_SELECTOR);
+}
+
+function getSelectors(): FH_Selectors {
+	return {
+		...DEFAULT_SELECTORS,
+		...config.selectors,
+	};
+}
+
+export function isHintsActive() {
+	return isActive;
+}
+
+function isInteractive(element: HTMLElement) {
+	const tag = element.tagName.toLowerCase();
+	if (
+		[
+			"a",
+			"button",
+			"input",
+			"select",
+			"textarea",
+		].includes(tag)
+	)
+		return true;
+	if (element.isContentEditable) return true;
+	if (element.hasAttribute("tabindex")) return true;
+	const role = element.getAttribute("role");
+	return [
+		"button",
+		"link",
+		"checkbox",
+		"radio",
+		"tab",
+		"menuitem",
+	].includes(role);
+}
+
+function isVisible(element: HTMLElement) {
+	if (typeof element.checkVisibility === "function") {
+		if (
+			!element.checkVisibility({
+				opacityProperty: true,
+			})
+		)
+			return false;
+	} else {
+		let node: HTMLElement | null = element;
+		while (node && node !== document.documentElement) {
+			const style = window.getComputedStyle(node);
+			if (
+				style.display === "none" ||
+				style.visibility === "hidden" ||
+				style.opacity === "0"
+			)
+				return false;
+			node = node.parentElement;
+		}
+	}
+	const rect = element.getBoundingClientRect();
+	return rect.width > 0 && rect.height > 0;
+}
+
+interface FH_Target {
+	element: HTMLElement;
+	action: FH_Action;
+}
+
+function collectTargets(targetKey: string): FH_Target[] {
+	const targets: FH_Target[] = [];
+	const seen = new Set<HTMLElement>();
+
+	const push = (element: HTMLElement, action?: FH_Action) => {
+		if (seen.has(element)) return;
+		if (!isVisible(element)) return;
+		if (isIgnored(element)) return;
+		seen.add(element);
+		targets.push({
+			element,
+			action: action ?? getDefaultAction(element),
+		});
+	};
+
+	const selectors = getSelectors();
+	const allSelector = `${selectors.links}, ${selectors.inputs}, ${selectors.buttons}, [tabindex]`;
+
+	for (const el of document.querySelectorAll<HTMLElement>("[data-fk]")) {
+		if ((el.getAttribute("data-fk") || "").toLowerCase() !== targetKey)
+			continue;
+
+		if (isInteractive(el)) {
+			push(el);
+			continue;
+		}
+
+		for (const child of el.querySelectorAll<HTMLElement>(allSelector)) {
+			if (child.hasAttribute("data-fk")) continue;
+			push(child);
+		}
+	}
+
+	if (config.autoGenerate) {
+		let selector: string | null = null;
+		let action: FH_Action = "click";
+
+		if (targetKey === config.keys.links) {
+			selector = selectors.links;
+			action = "click";
+		} else if (targetKey === config.keys.inputs) {
+			selector = selectors.inputs;
+			action = "focus";
+		} else if (targetKey === config.keys.buttons) {
+			selector = selectors.buttons;
+			action = "click";
+		}
+
+		if (selector) {
+			for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+				if (el.hasAttribute("data-fk")) continue;
+				push(el, action);
+			}
+		}
+	}
+
+	targets.sort((a, b) => {
+		const ra = a.element.getBoundingClientRect();
+		const rb = b.element.getBoundingClientRect();
+		return ra.top - rb.top || ra.left - rb.left;
+	});
+
+	return targets;
+}
 
 export function activate(key?: string) {
 	if (isActive) return;
+
+	const targetKey = (key || config.keys.links).toLowerCase();
+	const targets = collectTargets(targetKey);
+	if (targets.length === 0) return;
+
 	isActive = true;
+	typedSequence = "";
 
-	const targetKey = key || config.keys.links;
+	const keys = generateKeys(targets.length);
+	const containerEl = getHintsContainer();
 
-	const hints: FH_Hint[] = [];
+	activeHints = targets.map((target, index) => ({
+		element: target.element,
+		key: keys[index],
+		action: target.action,
+		label: createLabel(keys[index]),
+	}));
 
-	const fkContainers = document.querySelectorAll<HTMLElement>(`[data-fk]`);
-	fkContainers.forEach(container => {
-		const containerKey = container.getAttribute("data-fk");
-		if (containerKey !== targetKey) return;
+	for (const hint of activeHints) containerEl.appendChild(hint.label);
+	for (const hint of activeHints) positionHint(hint);
 
-		const children = Array.from(
-			container.querySelectorAll<HTMLElement>(
-				"a[href], button, input, select, textarea, [tabindex], [role]",
-			),
-		).filter(el => isVisible(el));
-
-		children.forEach((child, index) => {
-			if (index < alphabet.length) {
-				const hint = createHint(
-					child,
-					alphabet[index],
-					getDefaultAction(child),
-				);
-				hints.push(hint);
-			}
-		});
+	containerEl.style.display = "block";
+	window.addEventListener("scroll", updatePositions, {
+		passive: true,
 	});
-
-	const fkElements = document.querySelectorAll<HTMLElement>(`[data-fk]`);
-	fkElements.forEach(element => {
-		const elementKey = element.getAttribute("data-fk");
-		if (elementKey === targetKey && !element.querySelector("[data-fk]")) {
-			const hint = createHint(element, elementKey, getDefaultAction(element));
-			hints.push(hint);
-		}
+	window.addEventListener("resize", updatePositions, {
+		passive: true,
 	});
-
-	if (config.autoGenerate && targetKey === config.keys.links) {
-		const links = Array.from(
-			document.querySelectorAll<HTMLElement>("a[href]"),
-		).filter(el => isVisible(el) && !el.hasAttribute("data-fk"));
-		links.forEach((link, index) => {
-			if (index < alphabet.length) {
-				const hint = createHint(link, alphabet[index], "click");
-				hints.push(hint);
-			}
-		});
-	}
-
-	if (config.autoGenerate && targetKey === config.keys.inputs) {
-		const inputs = Array.from(
-			document.querySelectorAll<HTMLElement>("input, select, textarea"),
-		).filter(el => isVisible(el) && !el.hasAttribute("data-fk"));
-		inputs.forEach((input, index) => {
-			if (index < alphabet.length) {
-				const hint = createHint(input, alphabet[index], "focus");
-				hints.push(hint);
-			}
-		});
-	}
-
-	if (config.autoGenerate && targetKey === config.keys.buttons) {
-		const buttons = Array.from(
-			document.querySelectorAll<HTMLElement>("button, [role=button]"),
-		).filter(el => isVisible(el) && !el.hasAttribute("data-fk"));
-		buttons.forEach((button, index) => {
-			if (index < alphabet.length) {
-				const hint = createHint(button, alphabet[index], "click");
-				hints.push(hint);
-			}
-		});
-	}
-
-	activeHints = hints;
-	hintsContainer.style.display = "block";
-	document.addEventListener("keydown", handleKeydown);
+	document.addEventListener("keydown", handleKeydown, true);
 }
 
 export function deactivate() {
 	if (!isActive) return;
 	isActive = false;
+	typedSequence = "";
 
-	activeHints.forEach(hint => {
-		hint.label.remove();
-	});
+	for (const hint of activeHints) hint.label.remove();
 	activeHints = [];
-	hintsContainer.style.display = "none";
-	document.removeEventListener("keydown", handleKeydown);
+
+	getHintsContainer().style.display = "none";
+	window.removeEventListener("scroll", updatePositions);
+	window.removeEventListener("resize", updatePositions);
+	document.removeEventListener("keydown", handleKeydown, true);
 }
 
-function createHint(
-	element: HTMLElement,
-	key: string,
-	action: FH_Action,
-): FH_Hint {
+export function tryDirectActivate(key: string) {
+	const elements = Array.from(
+		document.querySelectorAll<HTMLElement>("[data-fk]"),
+	);
+	const matching = elements.filter(
+		el =>
+			!isIgnored(el) &&
+			(el.getAttribute("data-fk") || "").toLowerCase() === key.toLowerCase(),
+	);
+
+	const hasGroup = matching.some(el => !isInteractive(el));
+	if (hasGroup || matching.length === 0) return false;
+
+	executeAction(matching[0], getDefaultAction(matching[0]));
+	return true;
+}
+
+function createLabel(key: string): HTMLDivElement {
 	const label = document.createElement("div");
 	label.className = "FH-hint";
 	label.textContent = key.toUpperCase();
+	return label;
+}
 
-	const rect = element.getBoundingClientRect();
-	label.style.position = "fixed";
-	label.style.left = `${rect.left}px`;
-	label.style.top = `${rect.top}px`;
-	label.style.zIndex = "9999";
+function positionHint(hint: FH_Hint) {
+	const rect = hint.element.getBoundingClientRect();
+	const width = hint.label.offsetWidth;
+	const height = hint.label.offsetHeight;
+	const pos = config.hintPosition;
 
-	hintsContainer.appendChild(label);
+	let left = pos.endsWith("-left") ? rect.left : rect.right - width;
+	let top = pos.startsWith("top") ? rect.top : rect.bottom - height;
 
-	return {
-		element,
-		key,
-		label,
-		action,
-	};
+	left = Math.max(0, Math.min(left, window.innerWidth - width));
+	top = Math.max(0, Math.min(top, window.innerHeight - height));
+
+	hint.label.style.left = `${left}px`;
+	hint.label.style.top = `${top}px`;
+}
+
+function updatePositions() {
+	if (!isActive) return;
+	for (const hint of activeHints) {
+		if (hint.label.style.display === "none") continue;
+		positionHint(hint);
+	}
+}
+
+function applyFilter() {
+	for (const hint of activeHints) {
+		const matches = hint.key.startsWith(typedSequence);
+		hint.label.style.display = matches ? "" : "none";
+	}
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -132,16 +257,38 @@ function handleKeydown(event: KeyboardEvent) {
 		return;
 	}
 
-	const key = event.key.toLowerCase();
-	const hint = activeHints.find(h => h.key === key);
+	if (event.ctrlKey || event.metaKey || event.altKey) return;
 
-	if (hint) {
-		executeAction(hint.element, hint.action);
-		deactivate();
+	if (event.key === "Backspace") {
+		event.preventDefault();
+		typedSequence = typedSequence.slice(0, -1);
+		applyFilter();
+		return;
 	}
+
+	const key = event.key.toLowerCase();
+	if (!/^[a-z]$/.test(key)) return;
+
+	event.preventDefault();
+
+	const next = typedSequence + key;
+	const matches = activeHints.filter(hint => hint.key.startsWith(next));
+	if (matches.length === 0) {
+		deactivate();
+		return;
+	}
+
+	typedSequence = next;
+
+	if (matches.length === 1 && matches[0].key === next) {
+		executeHint(matches[0]);
+		return;
+	}
+
+	applyFilter();
 }
 
-function isVisible(element: HTMLElement) {
-	const rect = element.getBoundingClientRect();
-	return rect.width > 0 && rect.height > 0;
+function executeHint(hint: FH_Hint) {
+	executeAction(hint.element, hint.action);
+	deactivate();
 }

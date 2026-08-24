@@ -1,13 +1,28 @@
 export type FH_Action = "click" | "focus" | "hover" | "scroll";
 
+export type FH_HintPosition =
+	| "top-left"
+	| "top-right"
+	| "bottom-left"
+	| "bottom-right";
+
+export interface FH_Keys {
+	links: string;
+	inputs: string;
+	buttons: string;
+}
+
+export interface FH_Selectors {
+	links: string;
+	inputs: string;
+	buttons: string;
+}
+
 export interface FH_Config {
-	keys: {
-		links: string;
-		inputs: string;
-		buttons: string;
-	};
+	keys: FH_Keys;
+	selectors: FH_Selectors;
 	autoGenerate: boolean;
-	hintPosition: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+	hintPosition: FH_HintPosition;
 	enabled: boolean;
 }
 

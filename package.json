@@ -14,7 +14,7 @@
     "type": "module",
     "scripts": {
         "build": "tsc && tsc-alias && sass src:dist",
-        "build:bun": "bun build src/index.ts --outdir public --outfile bundle.js --target browser"
+        "build:bun": "bun build src/index.ts --outdir public --target browser"
     },
     "devDependencies": {
         "@wxn0brp/biome": "*",
