@@ -1,0 +1,103 @@
+import "@wxn0brp/flanker-ui/html";
+import { activate, deactivate, isHintsActive, tryDirectActivate, } from "./hints.js";
+import { IGNORE_SELECTOR } from "./vars.js";
+export let config;
+const defaultConfig = {
+    autoGenerate: true,
+    hintPosition: "top-left",
+    enabled: true,
+    keys: {
+        links: "f",
+        inputs: "i",
+        buttons: "b",
+    },
+    selectors: {
+        links: "a[href]",
+        inputs: "input, select, textarea, [contenteditable]",
+        buttons: "button, [role=button]",
+    },
+};
+let customKeysCache = null;
+let observer = null;
+function getCustomKeys() {
+    if (!customKeysCache) {
+        customKeysCache = new Set();
+        for (const el of document.querySelectorAll("[data-fk]")) {
+            if (el.closest(IGNORE_SELECTOR))
+                continue;
+            customKeysCache.add((el.getAttribute("data-fk") || "").toLowerCase());
+        }
+    }
+    return customKeysCache;
+}
+export function init(cfg = {}) {
+    config = {
+        ...defaultConfig,
+        ...cfg,
+        keys: {
+            ...defaultConfig.keys,
+            ...cfg?.keys,
+        },
+        selectors: {
+            ...defaultConfig.selectors,
+            ...cfg?.selectors,
+        },
+    };
+    customKeysCache = null;
+    observer?.disconnect();
+    observer = new MutationObserver(() => {
+        customKeysCache = null;
+    });
+    observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributeFilter: [
+            "data-fk",
+        ],
+    });
+    document.addEventListener("keydown", handleKeydown);
+}
+function handleKeydown(event) {
+    if (!config.enabled)
+        return;
+    if (isHintsActive())
+        return;
+    if (event.ctrlKey || event.metaKey || event.altKey)
+        return;
+    const target = event.target;
+    if (target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable)
+        return;
+    const key = event.key.toLowerCase();
+    const { keys } = config;
+    if (key === keys.links || key === keys.inputs || key === keys.buttons) {
+        event.preventDefault();
+        activate(key);
+        return;
+    }
+    if (getCustomKeys().has(key)) {
+        event.preventDefault();
+        if (!tryDirectActivate(key))
+            activate(key);
+    }
+}
+export function enable() {
+    config.enabled = true;
+}
+export function disable() {
+    config.enabled = false;
+    deactivate();
+}
+window.FH = {
+    init,
+    activate,
+    deactivate,
+    enable,
+    disable,
+};
+export * from "./actions.js";
+export * from "./hints.js";
+export * from "./keyGen.js";
+export * from "./types.js";
+export * from "./vars.js";

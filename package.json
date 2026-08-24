@@ -1,0 +1,41 @@
+{
+  "name": "@wxn0brp/flanker-hints",
+  "version": "0.1.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "description": "Vimium-style navigation hints for Flanker UI",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxn0brP/FlankerHints.git"
+  },
+  "homepage": "https://github.com/wxn0brP/FlankerHints",
+  "author": "wxn0brP",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@wxn0brp/biome": "*",
+    "@wxn0brp/flanker-ui": "^0.5.2",
+    "sass": "^1.102.0",
+    "tsc-alias": "^1",
+    "typescript": "^7"
+  },
+  "peerDependencies": {
+    "@wxn0brp/flanker-ui": "^0.5.2"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  }
+}
