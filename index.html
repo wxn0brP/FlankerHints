@@ -13,9 +13,12 @@
 <h2 id="features" class="tsd-anchor-link">Features<a href="#features" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li><strong>Visual Hints</strong>: Overlay labels with letters (like Vimium) appear on interactive elements</li>
-<li><strong>data-fk Support</strong>: Define custom shortcuts with <code>data-fk</code> attribute</li>
+<li><strong>Multi-character Keys</strong>: Above 26 elements, uniform two/three-letter keys are used (<code>AA</code>, <code>AB</code>...)</li>
+<li><strong>Progressive Filtering</strong>: While hints are active, type letters to filter; full match executes</li>
+<li><strong>Off-screen Navigation</strong>: Elements outside the viewport scroll into view before the action runs</li>
+<li><strong>data-fk Support</strong>: Define custom shortcuts with <code>data-fk</code> attribute - containers show child hints, interactive elements execute immediately</li>
 <li><strong>Auto-generated Hints</strong>: Automatically adds hints to links, inputs, and buttons</li>
-<li><strong>Configurable Keys</strong>: Customize activation keys (default: f=links, i=inputs, b=buttons)</li>
+<li><strong>Configurable Keys &amp; Selectors</strong>: Customize activation keys and target selectors</li>
 <li><strong>Multiple Actions</strong>: Click, focus, hover, or scroll to elements</li>
 <li><strong>Global Access</strong>: Available via <code>window.FH</code> object</li>
 </ul>
@@ -30,9 +33,17 @@
 </code><button type="button">Copy</button></pre>
 
 <h3 id="configuration" class="tsd-anchor-link">Configuration<a href="#configuration" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<pre><code class="typescript"><span class="hl-10">import</span><span class="hl-1"> { </span><span class="hl-8">init</span><span class="hl-1"> } </span><span class="hl-10">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@wxn0brp/flanker-hints&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-0">init</span><span class="hl-1">({</span><br/><span class="hl-1">    </span><span class="hl-8">keys:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-8">links:</span><span class="hl-1"> </span><span class="hl-2">&quot;f&quot;</span><span class="hl-1">,      </span><span class="hl-11">// Press &quot;f&quot; to see link hints</span><br/><span class="hl-1">        </span><span class="hl-8">inputs:</span><span class="hl-1"> </span><span class="hl-2">&quot;i&quot;</span><span class="hl-1">,     </span><span class="hl-11">// Press &quot;i&quot; to see input hints</span><br/><span class="hl-1">        </span><span class="hl-8">buttons:</span><span class="hl-1"> </span><span class="hl-2">&quot;b&quot;</span><span class="hl-1">,    </span><span class="hl-11">// Press &quot;b&quot; to see button hints</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">    </span><span class="hl-8">autoGenerate:</span><span class="hl-1"> </span><span class="hl-12">true</span><span class="hl-1">,  </span><span class="hl-11">// Auto-generate hints for common elements</span><br/><span class="hl-1">    </span><span class="hl-8">hintPosition:</span><span class="hl-1"> </span><span class="hl-2">&quot;top-left&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
+<pre><code class="typescript"><span class="hl-10">import</span><span class="hl-1"> { </span><span class="hl-8">init</span><span class="hl-1"> } </span><span class="hl-10">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@wxn0brp/flanker-hints&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-0">init</span><span class="hl-1">({</span><br/><span class="hl-1">    </span><span class="hl-8">keys:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-8">links:</span><span class="hl-1"> </span><span class="hl-2">&quot;f&quot;</span><span class="hl-1">,      </span><span class="hl-11">// Press &quot;f&quot; to see link hints</span><br/><span class="hl-1">        </span><span class="hl-8">inputs:</span><span class="hl-1"> </span><span class="hl-2">&quot;i&quot;</span><span class="hl-1">,     </span><span class="hl-11">// Press &quot;i&quot; to see input hints</span><br/><span class="hl-1">        </span><span class="hl-8">buttons:</span><span class="hl-1"> </span><span class="hl-2">&quot;b&quot;</span><span class="hl-1">,    </span><span class="hl-11">// Press &quot;b&quot; to see button hints</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">    </span><span class="hl-8">selectors:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-8">links:</span><span class="hl-1"> </span><span class="hl-2">&quot;a[href]&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">inputs:</span><span class="hl-1"> </span><span class="hl-2">&quot;input, select, textarea, [contenteditable]&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-8">buttons:</span><span class="hl-1"> </span><span class="hl-2">&quot;button, [role=button]&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">    },</span><br/><span class="hl-1">    </span><span class="hl-8">autoGenerate:</span><span class="hl-1"> </span><span class="hl-12">true</span><span class="hl-1">,  </span><span class="hl-11">// Auto-generate hints for common elements</span><br/><span class="hl-1">    </span><span class="hl-8">hintPosition:</span><span class="hl-1"> </span><span class="hl-2">&quot;top-left&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">});</span>
 </code><button type="button">Copy</button></pre>
 
+<h3 id="navigating-hints" class="tsd-anchor-link">Navigating hints<a href="#navigating-hints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>Once hints are visible:</p>
+<ul>
+<li>Type letters to filter hints progressively (non-matching labels hide)</li>
+<li>A complete key match executes the element's action</li>
+<li><code>Backspace</code> removes the last typed character</li>
+<li><code>Escape</code> hides all hints</li>
+</ul>
 <h3 id="using-data-fk" class="tsd-anchor-link">Using data-fk<a href="#using-data-fk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <h4 id="container-with-custom-key" class="tsd-anchor-link">Container with custom key<a href="#container-with-custom-key" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h4>
 <pre><code class="html"><span class="hl-3">&lt;</span><span class="hl-4">nav</span><span class="hl-1"> </span><span class="hl-5">data-fk</span><span class="hl-1">=</span><span class="hl-6">&quot;g&quot;</span><span class="hl-3">&gt;</span><br/><span class="hl-1">    </span><span class="hl-3">&lt;</span><span class="hl-4">a</span><span class="hl-1"> </span><span class="hl-5">href</span><span class="hl-1">=</span><span class="hl-6">&quot;/home&quot;</span><span class="hl-3">&gt;</span><span class="hl-1">Home</span><span class="hl-3">&lt;/</span><span class="hl-4">a</span><span class="hl-3">&gt;</span><br/><span class="hl-1">    </span><span class="hl-3">&lt;</span><span class="hl-4">a</span><span class="hl-1"> </span><span class="hl-5">href</span><span class="hl-1">=</span><span class="hl-6">&quot;/about&quot;</span><span class="hl-3">&gt;</span><span class="hl-1">About</span><span class="hl-3">&lt;/</span><span class="hl-4">a</span><span class="hl-3">&gt;</span><br/><span class="hl-1">    </span><span class="hl-3">&lt;</span><span class="hl-4">a</span><span class="hl-1"> </span><span class="hl-5">href</span><span class="hl-1">=</span><span class="hl-6">&quot;/contact&quot;</span><span class="hl-3">&gt;</span><span class="hl-1">Contact</span><span class="hl-3">&lt;/</span><span class="hl-4">a</span><span class="hl-3">&gt;</span><br/><span class="hl-3">&lt;/</span><span class="hl-4">nav</span><span class="hl-3">&gt;</span>
@@ -44,15 +55,23 @@
 </code><button type="button">Copy</button></pre>
 
 <p>Press &quot;x&quot; to activate the button.</p>
-<h3 id="programmatic-control" class="tsd-anchor-link">Programmatic Control<a href="#programmatic-control" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<h3 id="ignoring-elements" class="tsd-anchor-link">Ignoring elements<a href="#ignoring-elements" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<pre><code class="html"><span class="hl-3">&lt;</span><span class="hl-4">a</span><span class="hl-1"> </span><span class="hl-5">href</span><span class="hl-1">=</span><span class="hl-6">&quot;/tracked&quot;</span><span class="hl-3">&gt;</span><span class="hl-1">Tracked</span><span class="hl-3">&lt;/</span><span class="hl-4">a</span><span class="hl-3">&gt;</span><br/><span class="hl-3">&lt;</span><span class="hl-4">a</span><span class="hl-1"> </span><span class="hl-5">href</span><span class="hl-1">=</span><span class="hl-6">&quot;/skipped&quot;</span><span class="hl-1"> </span><span class="hl-5">data-fk-i</span><span class="hl-3">&gt;</span><span class="hl-1">Skipped by FlankerHints</span><span class="hl-3">&lt;/</span><span class="hl-4">a</span><span class="hl-3">&gt;</span><br/><br/><span class="hl-3">&lt;</span><span class="hl-4">div</span><span class="hl-1"> </span><span class="hl-5">data-fk-i</span><span class="hl-3">&gt;</span><br/><span class="hl-1">    </span><span class="hl-11">&lt;!-- the whole subtree is skipped --&gt;</span><br/><span class="hl-1">    </span><span class="hl-3">&lt;</span><span class="hl-4">button</span><span class="hl-3">&gt;</span><span class="hl-1">No hints here</span><span class="hl-3">&lt;/</span><span class="hl-4">button</span><span class="hl-3">&gt;</span><br/><span class="hl-3">&lt;/</span><span class="hl-4">div</span><span class="hl-3">&gt;</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="simple-control" class="tsd-anchor-link">Simple Control<a href="#simple-control" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <pre><code class="typescript"><span class="hl-10">import</span><span class="hl-1"> { </span><span class="hl-8">activate</span><span class="hl-1">, </span><span class="hl-8">deactivate</span><span class="hl-1"> } </span><span class="hl-10">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@wxn0brp/flanker-hints&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-0">activate</span><span class="hl-1">(</span><span class="hl-2">&quot;f&quot;</span><span class="hl-1">);  </span><span class="hl-11">// Show link hints</span><br/><span class="hl-0">deactivate</span><span class="hl-1">();   </span><span class="hl-11">// Hide all hints</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Globally enable/disable the module (also available as <code>FH.enable</code> / <code>FH.disable</code>):</p>
+<pre><code class="typescript"><span class="hl-10">import</span><span class="hl-1"> { </span><span class="hl-8">disable</span><span class="hl-1">, </span><span class="hl-8">enable</span><span class="hl-1"> } </span><span class="hl-10">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@wxn0brp/flanker-hints&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-0">disable</span><span class="hl-1">();  </span><span class="hl-11">// Ignore all trigger keys</span><br/><span class="hl-0">enable</span><span class="hl-1">();</span>
 </code><button type="button">Copy</button></pre>
 
 <h2 id="actions" class="tsd-anchor-link">Actions<a href="#actions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>The module automatically determines the best action for each element:</p>
 <ul>
 <li><strong>Links</strong>: Click</li>
-<li><strong>Inputs/Selects/Textareas</strong>: Focus</li>
+<li><strong>Inputs/Selects/Textareas/Contenteditable</strong>: Focus</li>
 <li><strong>Buttons</strong>: Click</li>
 <li><strong>Other elements</strong>: Click</li>
 </ul>
@@ -90,12 +109,14 @@
 <ul>
 <li><a href="#basic-setup"><span>Basic <wbr/>Setup</span></a></li>
 <li><a href="#configuration"><span>Configuration</span></a></li>
+<li><a href="#navigating-hints"><span>Navigating hints</span></a></li>
 <li><a href="#using-data-fk"><span>Using data-<wbr/>fk</span></a></li>
 <li>
 <ul>
 <li><a href="#container-with-custom-key"><span>Container with custom key</span></a></li>
 <li><a href="#direct-element"><span>Direct element</span></a></li></ul></li>
-<li><a href="#programmatic-control"><span>Programmatic <wbr/>Control</span></a></li></ul></li>
+<li><a href="#ignoring-elements"><span>Ignoring elements</span></a></li>
+<li><a href="#simple-control"><span>Simple <wbr/>Control</span></a></li></ul></li>
 <li><a href="#actions"><span>Actions</span></a></li>
 <li><a href="#styling"><span>Styling</span></a></li>
 <li><a href="#license"><span>License</span></a></li></ul></div></details></div>
